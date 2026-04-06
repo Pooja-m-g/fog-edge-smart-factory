@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Factory | Fog Edge Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #00ffff, #0066ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .logo p {
+            font-size: 12px;
+            color: #8892b0;
+        }
+        
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .live-badge {
+            background: #ff3366;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        .live-badge.warning {
+            background: #ffaa00;
+            animation: none;
+        }
+        
+        .live-badge.error {
+            background: #ff3366;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .time-badge {
+            color: #8892b0;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        /* Warning Banner */
+        .warning-banner {
+            background: rgba(255, 51, 102, 0.2);
+            border-left: 4px solid #ff3366;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .warning-banner i {
+            font-size: 24px;
+            color: #ff3366;
+        }
+        
+        .warning-banner .message {
+            flex: 1;
+        }
+        
+        .warning-banner .retry-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #ff3366;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .info-banner {
+            background: rgba(0, 255, 255, 0.1);
+            border-left: 4px solid #00ffff;
+        }
+        
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 255, 255, 0.4);
+        }
+        
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .kpi-title {
+            font-size: 14px;
+            color: #8892b0;
+            font-weight: 500;
+        }
+        
+        .kpi-icon {
+            font-size: 28px;
+            color: #00ffff;
+        }
+        
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .kpi-trend {
+            font-size: 12px;
+            color: #8892b0;
+        }
+        
+        .kpi-value.na {
+            color: #8892b0;
+            font-size: 24px;
+        }
+        
+        /* Filter Bar */
+        .filter-bar {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            color: #8892b0;
+            margin-bottom: 8px;
+        }
+        
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00ffff, #0066ff);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+        }
+        
+        .chart-card h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-card canvas {
+            max-height: 250px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            color: #8892b0;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            color: #8892b0;
+        }
+        
+        /* Alerts Section */
+        .alerts-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #ff3366;
+        }
+        
+        .alerts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .alerts-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .alert-item {
+            background: rgba(255, 51, 102, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Data Table */
+        .table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            color: #00ffff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        td {
+            font-size: 14px;
+            color: #ccd6f6;
+        }
+        
+        tr:hover {
+            background: rgba(0, 255, 255, 0.05);
+        }
+        
+        .status-normal {
+            color: #00ff88;
+        }
+        
+        .status-warning {
+            color: #ffaa00;
+        }
+        
+        .status-critical {
+            color: #ff3366;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(0, 255, 255, 0.1);
+            border-top: 3px solid #00ffff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .container {
+                padding: 15px;
+            }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00ffff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1><i class="fas fa-microchip"></i> FogEdge Smart Factory</h1>
+                <p>Industrial IoT Monitoring | Real-time Sensor Data</p>
+            </div>
+            <div class="status-badge">
+                <div class="live-badge" id="liveBadge"><i class="fas fa-circle"></i> LIVE</div>
+                <div class="time-badge" id="currentTime"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Warning/Error Banner -->
+        <div id="warningBanner" style="display: none;"></div>
+        
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpiGrid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Temperature</span>
+                    <i class="fas fa-thermometer-half kpi-icon"></i>
+                </div>
+                <div class="kpi-value" id="tempValue">--C</div>
+                <div class="kpi-trend" id="tempTrend">Waiting for data...</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Humidity</span>
+                    <i class="fas fa-tint kpi-icon"></i>
+                </div>
+                <div class="kpi-value" id="humidityValue">--%</div>
+                <div class="kpi-trend" id="humidityTrend">Waiting for data...</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">CPU Usage</span>
+                    <i class="fas fa-microchip kpi-icon"></i>
+                </div>
+                <div class="kpi-value" id="cpuValue">--%</div>
+                <div class="kpi-trend" id="cpuTrend">Waiting for data...</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Air Quality</span>
+                    <i class="fas fa-wind kpi-icon"></i>
+                </div>
+                <div class="kpi-value" id="airValue">--</div>
+                <div class="kpi-trend" id="airTrend">Waiting for data...</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Pressure</span>
+                    <i class="fas fa-tachometer-alt kpi-icon"></i>
+                </div>
+                <div class="kpi-value" id="pressureValue">-- hPa</div>
+                <div class="kpi-trend" id="pressureTrend">Waiting for data...</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Records</span>
+                    <i class="fas fa-database kpi-icon"></i>
+                </div>
+                <div class="kpi-value" id="totalRecords">0</div>
+                <div class="kpi-trend">Last fetch</div>
+            </div>
+        </div>
+        
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> Start Date</label>
+                <input type="datetime-local" id="startDate">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> End Date</label>
+                <input type="datetime-local" id="endDate">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-microchip"></i> Device ID</label>
+                <select id="deviceFilter">
+                    <option value="">All Devices</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-chart-line"></i> Records Limit</label>
+                <select id="limitFilter">
+                    <option value="50">Last 50</option>
+                    <option value="100" selected>Last 100</option>
+                    <option value="200">Last 200</option>
+                    <option value="500">Last 500</option>
+                </select>
+            </div>
+            <button class="btn" onclick="applyFilters()"><i class="fas fa-filter"></i> Apply</button>
+            <button class="btn btn-secondary" onclick="resetFilters()"><i class="fas fa-undo"></i> Reset</button>
+            <button class="btn btn-secondary" onclick="forceRefresh()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        
+        <!-- Charts Grid -->
+        <div class="charts-grid" id="chartsGrid">
+            <div class="chart-card">
+                <h3><i class="fas fa-thermometer-half" style="color: #ff6b6b;"></i> Temperature Trend</h3>
+                <canvas id="tempChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-tint" style="color: #4ecdc4;"></i> Humidity Trend</h3>
+                <canvas id="humidityChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-microchip" style="color: #ffe66d;"></i> CPU Usage Trend</h3>
+                <canvas id="cpuChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-wind" style="color: #a8e6cf;"></i> Air Quality Trend</h3>
+                <canvas id="airChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Empty State (shown when no data) -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="fas fa-chart-line"></i>
+            <h3>No Data Available</h3>
+            <p>Waiting for sensor data from the Lambda API...</p>
+            <button class="btn" onclick="forceRefresh()" style="margin-top: 15px;">
+                <i class="fas fa-sync-alt"></i> Try Again
+            </button>
+        </div>
+        
+        <!-- Alerts Section -->
+        <div id="alertsSection" class="alerts-section" style="display: none;">
+            <div class="alerts-header">
+                <div class="alerts-title"><i class="fas fa-bell"></i> Active Alerts</div>
+                <span id="alertsCount">0 alerts</span>
+            </div>
+            <div id="alertsList"></div>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <div class="table-header">
+                <h3><i class="fas fa-table"></i> Sensor Data Logs</h3>
+                <input type="text" id="searchInput" placeholder="Search records..." style="padding: 8px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,255,255,0.2); border-radius: 8px; color: white;">
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Device</th>
+                            <th>Temp</th>
+                            <th>Humidity</th>
+                            <th>CPU</th>
+                            <th>Air</th>
+                            <th>Pressure</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let charts = {};
+        let currentData = [];
+        let refreshInterval;
+        let isDataAvailable = false;
+        const REFRESH_SECONDS = {{ refresh_interval }};
+        
+        function initCharts() {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { labels: { color: '#ccd6f6' } } },
+                scales: {
+                    x: { ticks: { color: '#8892b0', maxRotation: 45, minRotation: 45 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#8892b0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            };
+            
+            charts.temp = new Chart(document.getElementById('tempChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Temperature (C)', data: [], borderColor: '#ff6b6b', backgroundColor: 'rgba(255,107,107,0.1)', fill: true }] },
+                options: chartOptions
+            });
+            charts.humidity = new Chart(document.getElementById('humidityChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Humidity (%)', data: [], borderColor: '#4ecdc4', backgroundColor: 'rgba(78,205,196,0.1)', fill: true }] },
+                options: chartOptions
+            });
+            charts.cpu = new Chart(document.getElementById('cpuChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'CPU Usage (%)', data: [], borderColor: '#ffe66d', backgroundColor: 'rgba(255,230,109,0.1)', fill: true }] },
+                options: chartOptions
+            });
+            charts.air = new Chart(document.getElementById('airChart'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Air Quality', data: [], borderColor: '#a8e6cf', backgroundColor: 'rgba(168,230,207,0.1)', fill: true }] },
+                options: chartOptions
+            });
+        }
+        
+        function formatDateForAPI(dateStr) {
+            if (!dateStr) return '';
+            // Convert datetime-local to API format (YYYY-MM-DD HH:MM:SS)
+            return dateStr.replace('T', ' ') + ':00';
+        }
+        
+        function showWarning(message, type = 'error') {
+            const banner = document.getElementById('warningBanner');
+            const isError = type === 'error';
+            banner.innerHTML = `
+                <div class="warning-banner ${isError ? '' : 'info-banner'}">
+                    <i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+                    <div class="message">${message}</div>
+                    <button class="retry-btn" onclick="forceRefresh()"><i class="fas fa-sync-alt"></i> Retry</button>
+                </div>
+            `;
+            banner.style.display = 'block';
+            
+            const badge = document.getElementById('liveBadge');
+            if (isError) {
+                badge.className = 'live-badge error';
+                badge.innerHTML = '<i class="fas fa-exclamation-circle"></i> NO DATA';
+            } else {
+                badge.className = 'live-badge warning';
+                badge.innerHTML = '<i class="fas fa-clock"></i> WAITING';
+            }
+        }
+        
+        function hideWarning() {
+            document.getElementById('warningBanner').style.display = 'none';
+            document.getElementById('liveBadge').className = 'live-badge';
+            document.getElementById('liveBadge').innerHTML = '<i class="fas fa-circle"></i> LIVE';
+        }
+        
+        function showEmptyState() {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('chartsGrid').style.display = 'none';
+            document.getElementById('alertsSection').style.display = 'none';
+            document.getElementById('tableContainer').style.display = 'none';
+            isDataAvailable = false;
+        }
+        
+        function hideEmptyState() {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('chartsGrid').style.display = 'grid';
+            document.getElementById('alertsSection').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'block';
+            isDataAvailable = true;
+        }
+        
+        async function fetchData() {
+            const startDateInput = document.getElementById('startDate').value;
+            const endDateInput = document.getElementById('endDate').value;
+            const deviceId = document.getElementById('deviceFilter').value;
+            const limit = document.getElementById('limitFilter').value;
+            
+            // Format dates properly
+            let startDate = startDateInput ? formatDateForAPI(startDateInput) : '';
+            let endDate = endDateInput ? formatDateForAPI(endDateInput) : '';
+            
+            let url = `/api/data?limit=${limit}`;
+            if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
+            if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
+            if (deviceId) url += `&device_id=${encodeURIComponent(deviceId)}`;
+            
+            console.log('Fetching data with URL:', url);
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    showWarning(result.error || 'Failed to fetch data', 'error');
+                    showEmptyState();
+                    return false;
+                }
+                
+                if (!result.data || result.data.length === 0) {
+                    let message = 'No sensor data available';
+                    if (startDateInput || endDateInput) {
+                        message = 'No data found for the selected date range';
+                    } else {
+                        message = 'No sensor data available. Waiting for data from Lambda API...';
+                    }
+                    showWarning(message, 'info');
+                    showEmptyState();
+                    return false;
+                }
+                
+                hideWarning();
+                hideEmptyState();
+                currentData = result.data;
+                updateDashboard(currentData);
+                return true;
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showWarning(`Connection error: ${error.message}`, 'error');
+                showEmptyState();
+                return false;
+            }
+        }
+        
+        async function fetchStats() {
+            if (!isDataAvailable) return;
+            try {
+                const response = await fetch('/api/stats');
+                const result = await response.json();
+                if (result.success && result.stats) {
+                    updateKPIs(result.stats);
+                }
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+        
+        async function fetchDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const result = await response.json();
+                if (result.success && result.devices) {
+                    const select = document.getElementById('deviceFilter');
+                    // Clear existing options except the first one
+                    while (select.options.length > 1) {
+                        select.remove(1);
+                    }
+                    result.devices.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device;
+                        option.textContent = device;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Devices error:', error);
+            }
+        }
+        
+        async function fetchAlerts() {
+            if (!isDataAvailable) return;
+            try {
+                const response = await fetch('/api/alerts');
+                const result = await response.json();
+                if (result.success && result.alerts) {
+                    updateAlerts(result.alerts);
+                }
+            } catch (error) {
+                console.error('Alerts error:', error);
+            }
+        }
+        
+        function updateKPIs(stats) {
+            document.getElementById('tempValue').innerHTML = `${stats.temperature.current}C`;
+            document.getElementById('humidityValue').innerHTML = `${stats.humidity.current}%`;
+            document.getElementById('cpuValue').innerHTML = `${stats.cpu.current}%`;
+            document.getElementById('airValue').innerHTML = stats.air_quality.current;
+            document.getElementById('pressureValue').innerHTML = `${stats.pressure.current} hPa`;
+            document.getElementById('totalRecords').innerHTML = stats.total_records;
+            
+            document.getElementById('tempTrend').innerHTML = `Avg: ${stats.temperature.avg}C | Min: ${stats.temperature.min} | Max: ${stats.temperature.max}`;
+            document.getElementById('humidityTrend').innerHTML = `Avg: ${stats.humidity.avg}% | Min: ${stats.humidity.min} | Max: ${stats.humidity.max}`;
+            document.getElementById('cpuTrend').innerHTML = `Avg: ${stats.cpu.avg}% | Min: ${stats.cpu.min} | Max: ${stats.cpu.max}`;
+            document.getElementById('airTrend').innerHTML = `Avg: ${stats.air_quality.avg} | Min: ${stats.air_quality.min} | Max: ${stats.air_quality.max}`;
+            document.getElementById('pressureTrend').innerHTML = `Avg: ${stats.pressure.avg} hPa | Min: ${stats.pressure.min} | Max: ${stats.pressure.max}`;
+        }
+        
+        function updateAlerts(alerts) {
+            const alertsSection = document.getElementById('alertsSection');
+            const alertsList = document.getElementById('alertsList');
+            const alertsCount = document.getElementById('alertsCount');
+            
+            if (!alerts || alerts.length === 0) {
+                alertsSection.style.display = 'none';
+                return;
+            }
+            
+            alertsSection.style.display = 'block';
+            alertsCount.textContent = `${alerts.length} alert${alerts.length > 1 ? 's' : ''}`;
+            alertsList.innerHTML = alerts.map(alert => `
+                <div class="alert-item">
+                    <div><strong><i class="fas fa-exclamation-triangle"></i> ${alert.device_id}</strong><br><small>${moment(alert.timestamp).format('MM-DD HH:mm:ss')}</small></div>
+                    <div>${alert.alerts.map(a => `<span class="status-critical">${a}</span>`).join('<br>')}</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateDashboard(data) {
+            if (!data || data.length === 0) return;
+            
+            const labels = data.map(d => moment(d.timestamp).format('HH:mm:ss')).reverse();
+            charts.temp.data.labels = labels;
+            charts.temp.data.datasets[0].data = data.map(d => d.temperature).reverse();
+            charts.temp.update();
+            
+            charts.humidity.data.labels = labels;
+            charts.humidity.data.datasets[0].data = data.map(d => d.humidity).reverse();
+            charts.humidity.update();
+            
+            charts.cpu.data.labels = labels;
+            charts.cpu.data.datasets[0].data = data.map(d => d.cpu).reverse();
+            charts.cpu.update();
+            
+            charts.air.data.labels = labels;
+            charts.air.data.datasets[0].data = data.map(d => d.air_quality).reverse();
+            charts.air.update();
+            
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const filteredData = searchTerm ? data.filter(d => 
+                d.device_id?.toLowerCase().includes(searchTerm) ||
+                d.temperature?.toString().includes(searchTerm)
+            ) : data;
+            
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = filteredData.slice(0, 100).map(record => {
+                let status = 'normal', statusClass = 'status-normal';
+                if (record.temperature > 35) { status = 'warning'; statusClass = 'status-warning'; }
+                if (record.temperature > 40) { status = 'critical'; statusClass = 'status-critical'; }
+                return `<tr>
+                    <td>${moment(record.timestamp).format('MM-DD HH:mm:ss')}</td>
+                    <td>${record.device_id || 'N/A'}</td>
+                    <td class="${record.temperature > 35 ? 'status-warning' : ''}">${record.temperature || 'N/A'}</td>
+                    <td>${record.humidity || 'N/A'}</td>
+                    <td class="${record.cpu > 80 ? 'status-critical' : ''}">${record.cpu || 'N/A'}</td>
+                    <td>${record.air_quality || 'N/A'}</td>
+                    <td>${record.pressure || 'N/A'}</td>
+                    <td class="${statusClass}"><i class="fas ${status === 'normal' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${status.toUpperCase()}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        async function refreshAll() {
+            await fetchData();
+            await fetchStats();
+            await fetchAlerts();
+            await fetchDevices();
+        }
+        
+        function applyFilters() { 
+            console.log('Applying filters...');
+            refreshAll(); 
+        }
+        
+        function resetFilters() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('deviceFilter').value = '';
+            document.getElementById('limitFilter').value = '100';
+            document.getElementById('searchInput').value = '';
+            refreshAll();
+        }
+        
+        function forceRefresh() { refreshAll(); }
+        
+        function updateTime() {
+            document.getElementById('currentTime').innerHTML = moment().format('YYYY-MM-DD HH:mm:ss');
+        }
+        
+        document.getElementById('searchInput')?.addEventListener('keyup', () => updateDashboard(currentData));
+        
+        async function init() {
+            initCharts();
+            await refreshAll();
+            updateTime();
+            setInterval(updateTime, 1000);
+            setInterval(() => {
+                if (isDataAvailable) {
+                    fetchData();
+                    fetchStats();
+                    fetchAlerts();
+                } else {
+                    refreshAll();
+                }
+            }, REFRESH_SECONDS * 1000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
