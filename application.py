@@ -4,7 +4,10 @@ import requests
 import json
 import logging
 
-app = Flask(__name__)
+application = Flask(__name__)
+
+
+app = application
 
 # Configuration
 API_URL = "https://j2cosuv4ge.execute-api.us-east-1.amazonaws.com/default/x23389401-store-fetch-lambda"
