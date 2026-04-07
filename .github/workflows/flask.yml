@@ -73,8 +73,8 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
-          application_name: X23389401-eb-fog-edge
-          environment_name: X23389401-eb-fog-edge-env
+          application_name: Eb-fog-edge-x23389401
+          environment_name: Eb-fog-edge-x23389401-env
           region: us-east-1
           version_label: flask-build-${{ github.run_number }}
           deployment_package: deploy.zip
