@@ -15,10 +15,9 @@ USE_DUMMY_DATA = False  # Set to True only for testing without Lambda
 REFRESH_INTERVAL = 5  # seconds
 
 # SNS Configuration - Update these values
-SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN', 'YOUR_SNS_TOPIC_ARN')
-SNS_REGION = os.environ.get('SNS_REGION', 'us-east-1')
-EMAIL_RECIPIENT = os.environ.get('EMAIL_RECIPIENT', 'your-email@example.com')
-
+SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:145075166360:x23389401-sns-fog-edge'
+SNS_REGION = 'us-east-1'
+EMAIL_RECIPIENT = 'x23389401@student.ncirl.ie'
 # Initialize SNS client
 try:
     sns_client = boto3.client('sns', region_name=SNS_REGION)
