@@ -80,6 +80,17 @@
             animation: none;
         }
         
+        .live-badge.normal {
+            background: #00ff88;
+            color: #0a0e27;
+            animation: none;
+        }
+        
+        .live-badge.critical {
+            background: #ff3366;
+            animation: pulse 1s infinite;
+        }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -94,6 +105,56 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
+        }
+        
+        /* System Status Banner */
+        .system-status-banner {
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .system-status-banner.normal {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 4px solid #00ff88;
+        }
+        
+        .system-status-banner.warning {
+            background: rgba(255, 170, 0, 0.1);
+            border-left: 4px solid #ffaa00;
+        }
+        
+        .system-status-banner.critical {
+            background: rgba(255, 51, 102, 0.15);
+            border-left: 4px solid #ff3366;
+            animation: pulse-bg 2s infinite;
+        }
+        
+        @keyframes pulse-bg {
+            0%, 100% { background: rgba(255, 51, 102, 0.15); }
+            50% { background: rgba(255, 51, 102, 0.3); }
+        }
+        
+        .status-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .status-label.normal { color: #00ff88; }
+        .status-label.warning { color: #ffaa00; }
+        .status-label.critical { color: #ff3366; }
+        
+        .status-message {
+            font-size: 14px;
+            color: #ccd6f6;
         }
         
         /* Warning Banner */
@@ -153,6 +214,16 @@
             border-color: rgba(0, 255, 255, 0.4);
         }
         
+        .kpi-card.critical {
+            border-color: #ff3366;
+            background: rgba(255, 51, 102, 0.1);
+        }
+        
+        .kpi-card.warning {
+            border-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+        }
+        
         .kpi-header {
             display: flex;
             justify-content: space-between;
@@ -182,12 +253,6 @@
             color: #8892b0;
         }
         
-        .kpi-value.na {
-            color: #8892b0;
-            font-size: 24px;
-        }
-        
-        /* Filter Bar */
         .filter-bar {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -240,7 +305,6 @@
             background: rgba(255, 255, 255, 0.1);
         }
         
-        /* Charts Grid */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -267,7 +331,6 @@
             max-height: 250px;
         }
         
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -290,7 +353,6 @@
             color: #8892b0;
         }
         
-        /* Alerts Section */
         .alerts-section {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -323,7 +385,6 @@
             gap: 10px;
         }
         
-        /* Data Table */
         .table-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -378,26 +439,6 @@
             color: #ff3366;
         }
         
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .spinner {
-            border: 3px solid rgba(0, 255, 255, 0.1);
-            border-top: 3px solid #00ffff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         @media (max-width: 768px) {
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -438,12 +479,21 @@
     </div>
     
     <div class="container">
+        <!-- System Status Banner -->
+        <div id="systemStatusBanner" class="system-status-banner normal">
+            <div>
+                <span class="status-label" id="statusLabel">NORMAL</span>
+                <span class="status-message" id="statusMessage">All systems operational</span>
+            </div>
+            <i class="fas fa-check-circle" style="font-size: 24px;"></i>
+        </div>
+        
         <!-- Warning/Error Banner -->
         <div id="warningBanner" style="display: none;"></div>
         
         <!-- KPI Cards -->
         <div class="kpi-grid" id="kpiGrid">
-            <div class="kpi-card">
+            <div class="kpi-card" id="tempCard">
                 <div class="kpi-header">
                     <span class="kpi-title">Temperature</span>
                     <i class="fas fa-thermometer-half kpi-icon"></i>
@@ -451,7 +501,7 @@
                 <div class="kpi-value" id="tempValue">--C</div>
                 <div class="kpi-trend" id="tempTrend">Waiting for data...</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" id="humidityCard">
                 <div class="kpi-header">
                     <span class="kpi-title">Humidity</span>
                     <i class="fas fa-tint kpi-icon"></i>
@@ -459,7 +509,7 @@
                 <div class="kpi-value" id="humidityValue">--%</div>
                 <div class="kpi-trend" id="humidityTrend">Waiting for data...</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" id="cpuCard">
                 <div class="kpi-header">
                     <span class="kpi-title">CPU Usage</span>
                     <i class="fas fa-microchip kpi-icon"></i>
@@ -467,7 +517,7 @@
                 <div class="kpi-value" id="cpuValue">--%</div>
                 <div class="kpi-trend" id="cpuTrend">Waiting for data...</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" id="airCard">
                 <div class="kpi-header">
                     <span class="kpi-title">Air Quality</span>
                     <i class="fas fa-wind kpi-icon"></i>
@@ -475,7 +525,7 @@
                 <div class="kpi-value" id="airValue">--</div>
                 <div class="kpi-trend" id="airTrend">Waiting for data...</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" id="pressureCard">
                 <div class="kpi-header">
                     <span class="kpi-title">Pressure</span>
                     <i class="fas fa-tachometer-alt kpi-icon"></i>
@@ -543,7 +593,7 @@
             </div>
         </div>
         
-        <!-- Empty State (shown when no data) -->
+        <!-- Empty State -->
         <div id="emptyState" class="empty-state" style="display: none;">
             <i class="fas fa-chart-line"></i>
             <h3>No Data Available</h3>
@@ -553,14 +603,7 @@
             </button>
         </div>
         
-        <!-- Alerts Section -->
-        <div id="alertsSection" class="alerts-section" style="display: none;">
-            <div class="alerts-header">
-                <div class="alerts-title"><i class="fas fa-bell"></i> Active Alerts</div>
-                <span id="alertsCount">0 alerts</span>
-            </div>
-            <div id="alertsList"></div>
-        </div>
+        
         
         <!-- Data Table -->
         <div class="table-container" id="tableContainer" style="display: none;">
@@ -573,7 +616,7 @@
                     <thead>
                         <tr>
                             <th>Timestamp</th>
-                            <th>Device</th>
+                            <!--<th>Device</th>-->
                             <th>Temp</th>
                             <th>Humidity</th>
                             <th>CPU</th>
@@ -588,10 +631,18 @@
         </div>
     </div>
     
+    <!-- Alerts Section -->
+        <div id="alertsSection" class="alerts-section" style="display: none;">
+            <div class="alerts-header">
+                <div class="alerts-title"><i class="fas fa-bell"></i> Active Alerts</div>
+                <span id="alertsCount">0 alerts</span>
+            </div>
+            <div id="alertsList"></div>
+        </div>
+    
     <script>
         let charts = {};
         let currentData = [];
-        let refreshInterval;
         let isDataAvailable = false;
         const REFRESH_SECONDS = {{ refresh_interval }};
         
@@ -630,7 +681,6 @@
         
         function formatDateForAPI(dateStr) {
             if (!dateStr) return '';
-            // Convert datetime-local to API format (YYYY-MM-DD HH:MM:SS)
             return dateStr.replace('T', ' ') + ':00';
         }
         
@@ -645,21 +695,10 @@
                 </div>
             `;
             banner.style.display = 'block';
-            
-            const badge = document.getElementById('liveBadge');
-            if (isError) {
-                badge.className = 'live-badge error';
-                badge.innerHTML = '<i class="fas fa-exclamation-circle"></i> NO DATA';
-            } else {
-                badge.className = 'live-badge warning';
-                badge.innerHTML = '<i class="fas fa-clock"></i> WAITING';
-            }
         }
         
         function hideWarning() {
             document.getElementById('warningBanner').style.display = 'none';
-            document.getElementById('liveBadge').className = 'live-badge';
-            document.getElementById('liveBadge').innerHTML = '<i class="fas fa-circle"></i> LIVE';
         }
         
         function showEmptyState() {
@@ -667,15 +706,64 @@
             document.getElementById('chartsGrid').style.display = 'none';
             document.getElementById('alertsSection').style.display = 'none';
             document.getElementById('tableContainer').style.display = 'none';
+            document.getElementById('systemStatusBanner').style.display = 'none';
             isDataAvailable = false;
         }
         
         function hideEmptyState() {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('chartsGrid').style.display = 'grid';
-            document.getElementById('alertsSection').style.display = 'block';
             document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('systemStatusBanner').style.display = 'flex';
             isDataAvailable = true;
+        }
+        
+        function updateSystemStatusBanner(overallStatus, overallStatusMessage) {
+            const banner = document.getElementById('systemStatusBanner');
+            const statusLabel = document.getElementById('statusLabel');
+            const statusMessage = document.getElementById('statusMessage');
+            const icon = banner.querySelector('i');
+            
+            banner.className = `system-status-banner ${overallStatus}`;
+            statusLabel.className = `status-label ${overallStatus}`;
+            
+            const liveBadge = document.getElementById('liveBadge');
+            liveBadge.className = `live-badge ${overallStatus}`;
+            
+            if (overallStatus === 'normal') {
+                statusLabel.innerHTML = 'NORMAL';
+                statusMessage.innerHTML = overallStatusMessage || 'All systems operational';
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = '#00ff88';
+                liveBadge.innerHTML = '<i class="fas fa-circle"></i> LIVE';
+            } else if (overallStatus === 'warning') {
+                statusLabel.innerHTML = 'WARNING';
+                statusMessage.innerHTML = overallStatusMessage || 'System approaching thresholds';
+                icon.className = 'fas fa-exclamation-triangle';
+                icon.style.color = '#ffaa00';
+                liveBadge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> WARNING';
+            } else if (overallStatus === 'critical') {
+                statusLabel.innerHTML = 'CRITICAL';
+                statusMessage.innerHTML = overallStatusMessage || 'Critical condition detected';
+                icon.className = 'fas fa-skull-crossbones';
+                icon.style.color = '#ff3366';
+                liveBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i> CRITICAL';
+            }
+        }
+        
+        function updateKPICardStatus(cardId, value, criticalMin, criticalMax, warningMin, warningMax) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            
+            card.classList.remove('critical', 'warning');
+            
+            if (value !== undefined && value !== null && value !== '--') {
+                if ((criticalMin && value < criticalMin) || (criticalMax && value > criticalMax)) {
+                    card.classList.add('critical');
+                } else if ((warningMin && value < warningMin) || (warningMax && value > warningMax)) {
+                    card.classList.add('warning');
+                }
+            }
         }
         
         async function fetchData() {
@@ -684,7 +772,6 @@
             const deviceId = document.getElementById('deviceFilter').value;
             const limit = document.getElementById('limitFilter').value;
             
-            // Format dates properly
             let startDate = startDateInput ? formatDateForAPI(startDateInput) : '';
             let endDate = endDateInput ? formatDateForAPI(endDateInput) : '';
             
@@ -692,8 +779,6 @@
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
             if (deviceId) url += `&device_id=${encodeURIComponent(deviceId)}`;
-            
-            console.log('Fetching data with URL:', url);
             
             try {
                 const response = await fetch(url);
@@ -720,6 +805,11 @@
                 hideWarning();
                 hideEmptyState();
                 currentData = result.data;
+                
+                if (result.overall_status) {
+                    updateSystemStatusBanner(result.overall_status, result.overall_status_message);
+                }
+                
                 updateDashboard(currentData);
                 return true;
                 
@@ -738,6 +828,10 @@
                 const result = await response.json();
                 if (result.success && result.stats) {
                     updateKPIs(result.stats);
+                    
+                    if (result.stats.overall_status) {
+                        updateSystemStatusBanner(result.stats.overall_status, result.stats.overall_status_message);
+                    }
                 }
             } catch (error) {
                 console.error('Stats error:', error);
@@ -750,7 +844,6 @@
                 const result = await response.json();
                 if (result.success && result.devices) {
                     const select = document.getElementById('deviceFilter');
-                    // Clear existing options except the first one
                     while (select.options.length > 1) {
                         select.remove(1);
                     }
@@ -792,6 +885,12 @@
             document.getElementById('cpuTrend').innerHTML = `Avg: ${stats.cpu.avg}% | Min: ${stats.cpu.min} | Max: ${stats.cpu.max}`;
             document.getElementById('airTrend').innerHTML = `Avg: ${stats.air_quality.avg} | Min: ${stats.air_quality.min} | Max: ${stats.air_quality.max}`;
             document.getElementById('pressureTrend').innerHTML = `Avg: ${stats.pressure.avg} hPa | Min: ${stats.pressure.min} | Max: ${stats.pressure.max}`;
+            
+            updateKPICardStatus('tempCard', stats.temperature.current, 10, 40, 15, 35);
+            updateKPICardStatus('humidityCard', stats.humidity.current, 25, 80, 30, 70);
+            updateKPICardStatus('cpuCard', stats.cpu.current, null, 90, null, 80);
+            updateKPICardStatus('airCard', stats.air_quality.current, null, 120, null, 100);
+            updateKPICardStatus('pressureCard', stats.pressure.current, 970, 1030, 980, 1020);
         }
         
         function updateAlerts(alerts) {
@@ -842,18 +941,22 @@
             
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = filteredData.slice(0, 100).map(record => {
-                let status = 'normal', statusClass = 'status-normal';
-                if (record.temperature > 35) { status = 'warning'; statusClass = 'status-warning'; }
-                if (record.temperature > 40) { status = 'critical'; statusClass = 'status-critical'; }
+                let statusClass = 'status-normal';
+                if (record.status === 'warning') statusClass = 'status-warning';
+                if (record.status === 'critical') statusClass = 'status-critical';
+                
+                let statusIcon = 'fa-check-circle';
+                if (record.status === 'warning') statusIcon = 'fa-exclamation-triangle';
+                if (record.status === 'critical') statusIcon = 'fa-skull-crossbones';
+                
                 return `<tr>
                     <td>${moment(record.timestamp).format('MM-DD HH:mm:ss')}</td>
-                    <td>${record.device_id || 'N/A'}</td>
                     <td class="${record.temperature > 35 ? 'status-warning' : ''}">${record.temperature || 'N/A'}</td>
                     <td>${record.humidity || 'N/A'}</td>
                     <td class="${record.cpu > 80 ? 'status-critical' : ''}">${record.cpu || 'N/A'}</td>
                     <td>${record.air_quality || 'N/A'}</td>
                     <td>${record.pressure || 'N/A'}</td>
-                    <td class="${statusClass}"><i class="fas ${status === 'normal' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${status.toUpperCase()}</td>
+                    <td class="${statusClass}"><i class="fas ${statusIcon}"></i> ${record.status ? record.status.toUpperCase() : 'NORMAL'}</td>
                 </tr>`;
             }).join('');
         }
@@ -865,10 +968,7 @@
             await fetchDevices();
         }
         
-        function applyFilters() { 
-            console.log('Applying filters...');
-            refreshAll(); 
-        }
+        function applyFilters() { refreshAll(); }
         
         function resetFilters() {
             document.getElementById('startDate').value = '';
